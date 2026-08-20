@@ -24,6 +24,8 @@ from __future__ import annotations
 import math
 
 import numpy as np
+import scipy.sparse as sp
+import scipy.sparse.linalg as spla
 import torch
 import matplotlib.pyplot as plt
 
@@ -42,8 +44,43 @@ def _site(op, i, n):
     return out
 
 
+# 稀疏版本：2^N 维空间里稠密对角化会瞬间爆炸（N=12 就要几十秒/次），
+# 而我们只需要最低的几个本征态 —— 用 Lanczos（scipy.sparse.linalg.eigsh）。
+_SZ = sp.csr_matrix(np.array([[1.0, 0.0], [0.0, -1.0]]))
+_SX = sp.csr_matrix(np.array([[0.0, 1.0], [1.0, 0.0]]))
+_SI = sp.identity(2, format="csr")
+
+
+def _site_sp(op, i, n):
+    out = sp.identity(1, format="csr")
+    for k in range(n):
+        out = sp.kron(out, op if k == i else _SI, format="csr")
+    return out
+
+
+def tfim_sparse(n: int, J: float = 1.0, g: float = 1.0) -> sp.csr_matrix:
+    """开边界横场 Ising 的稀疏哈密顿量 H = −J Σ Z_i Z_{i+1} − g Σ X_i。"""
+    Zs = [_site_sp(_SZ, i, n) for i in range(n)]
+    Hm = sp.csr_matrix((2 ** n, 2 ** n))
+    for i in range(n - 1):
+        Hm = Hm - J * (Zs[i] @ Zs[i + 1])
+    for i in range(n):
+        Hm = Hm - g * _site_sp(_SX, i, n)
+    return Hm.tocsr()
+
+
+def lowest(n: int, J: float, g: float, k: int = 2):
+    """返回最低 k 个本征值与基态波函数（torch 张量）。"""
+    Hm = tfim_sparse(n, J, g)
+    kk = min(k, 2 ** n - 2)
+    ev, evec = spla.eigsh(Hm, k=kk, which="SA", tol=1e-10)
+    order = np.argsort(ev)
+    ev, evec = ev[order], evec[:, order]
+    return ev, torch.tensor(evec[:, 0], dtype=DT)
+
+
 def tfim_real(n: int, J: float = 1.0, g: float = 1.0) -> torch.Tensor:
-    """实对称的 TFIM 哈密顿量（开边界），比复数版省一半内存、快一倍。"""
+    """稠密实对称版本（只在小尺寸做校验时用）。"""
     dim = 2 ** n
     Hm = torch.zeros((dim, dim), dtype=DT)
     Zs = [_site(Z_R, i, n) for i in range(n)]
@@ -70,16 +107,16 @@ def fig_quantum_phase_transition():
     gaps, mags, ents, e_dens = {}, {}, {}, {}
     for n in sizes:
         gap_l, mag_l, ent_l, ed_l = [], [], [], []
-        Zs = [_site(Z_R, i, n) for i in range(n)]
+        Zs = [_site_sp(_SZ, i, n) for i in range(n)]
         Mz = sum(Zs) / n
+        Mz2 = (Mz @ Mz).toarray()
         for g in gs_vals:
-            Hm = tfim_real(n, 1.0, float(g))
-            ev, evec = torch.linalg.eigh(Hm)
-            psi0 = evec[:, 0]
+            ev, psi0 = lowest(n, 1.0, float(g), k=2)
             gap_l.append(float(ev[1] - ev[0]))
             ed_l.append(float(ev[0]) / n)
             # 序参量用 √〈M_z²〉（有限尺寸下 〈M_z〉 恒为 0，因为 Z₂ 对称性未破缺）
-            mag_l.append(math.sqrt(float(psi0 @ (Mz @ Mz) @ psi0)))
+            v = psi0.numpy()
+            mag_l.append(math.sqrt(max(float(v @ (Mz2 @ v)), 0.0)))
             ent_l.append(half_chain_entropy(psi0, n, n // 2))
         gaps[n], mags[n], ents[n], e_dens[n] = gap_l, mag_l, ent_l, ed_l
         print(f"  N={n:2d} 完成：g=1 处能隙 = {np.interp(1.0, gs_vals, gap_l):.4f}，"
@@ -146,9 +183,7 @@ def fig_entanglement_scaling():
     for g, col, name in [(0.4, C["blue"], "g=0.4 有序相"),
                          (1.0, C["orange"], "g=1.0 临界点"),
                          (2.0, C["aqua"], "g=2.0 无序相")]:
-        Hm = tfim_real(n, 1.0, g)
-        ev, evec = torch.linalg.eigh(Hm)
-        psi0 = evec[:, 0]
+        _, psi0 = lowest(n, 1.0, g, k=2)
         ls = list(range(1, n))
         S = [half_chain_entropy(psi0, n, l) for l in ls]
         results[g] = (ls, S)
