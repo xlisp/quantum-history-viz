@@ -82,7 +82,7 @@ def fig_uv_catastrophe():
 
 
 # ------------------------------------------------------------------ 图 2
-def fit_constants(seed: int = 0, steps: int = 4000):
+def fit_constants(seed: int = 0, steps: int = 1500):
     """用 PyTorch autograd 从"实验光谱"里把 h 和 k_B 拟合出来。"""
     g = torch.Generator().manual_seed(seed)
     temps = torch.tensor([1000.0, 1200.0, 1400.0, 1600.0], dtype=torch.float64)
