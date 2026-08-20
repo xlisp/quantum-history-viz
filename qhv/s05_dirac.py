@@ -28,7 +28,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-from .style import use_style, finish, section, C, SERIES, INK, INK_2, INK_MUTED
+from .style import use_style, finish, section, C, SERIES, SEQ_BLUE, INK, INK_2, INK_MUTED
 
 DT, CT = torch.float64, torch.complex128
 I2 = torch.eye(2, dtype=CT)
@@ -145,7 +145,7 @@ def fig_zitterbewegung():
         rho = (px.abs() ** 2).sum(0)
         rho = rho / (rho.sum() * dx)
         xmean.append(float((x * rho).sum() * dx))
-        if i % 90 == 0:
+        if i % 150 == 0:
             dens.append((float(t), rho.clone()))
     xmean = np.array(xmean)
     ts_np = ts.numpy()
@@ -167,8 +167,10 @@ def fig_zitterbewegung():
     gs = fig.add_gridspec(2, 2, height_ratios=[1, 1], hspace=0.36, wspace=0.22)
 
     ax = fig.add_subplot(gs[0, :])
+    # 时间是有序量 → 用单色顺序色阶（浅→深），不是分类色
+    ramp = [SEQ_BLUE[i] for i in (3, 5, 7, 9, 10, 12)]
     for i, (t, rho) in enumerate(dens):
-        ax.plot(x, rho, color=SERIES[i % 8], lw=1.6, label=f"t = {t:.0f}")
+        ax.plot(x, rho, color=ramp[i % len(ramp)], lw=1.8, label=f"t = {t:.0f}")
     ax.set_xlim(-15, 30); ax.set_xlabel("x (康普顿波长 ħ/mc)"); ax.set_ylabel("ρ(x,t)")
     ax.set_title("1+1 维狄拉克波包的严格演化")
     ax.legend(ncol=5, loc="upper right", fontsize=8.5)
@@ -187,7 +189,7 @@ def fig_zitterbewegung():
         ax.axvline(j * per, color=INK_MUTED, lw=0.6, ls=":")
     ax.set_xlabel("t"); ax.set_ylabel("〈x〉 − 漂移")
     ax.set_title("② 扣掉漂移后：Zitterbewegung 颤动")
-    ax.text(0.02, 0.04,
+    ax.text(0.40, 0.66,
             f"数值主频 ω = {w_peak:.2f}，理论 ω_Z = 2E(k₀)/ħ = {w_theory:.2f}\n"
             f"下限 2mc²/ħ = {2*m*c**2:.1f}；虚线为周期 πħ/mc² = {per:.2f}\n"
             f"幅度 ≈ {amp:.2f} ħ/mc ≈ {amp*3.86e-13:.0e} m",
