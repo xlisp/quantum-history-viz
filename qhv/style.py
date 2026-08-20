@@ -42,9 +42,11 @@ GRID = "#e3e2dd"
 
 def _pick_cjk_font() -> str:
     installed = {f.name for f in font_manager.fontManager.ttflist}
-    for name in ("PingFang SC", "Hiragino Sans GB", "Arial Unicode MS", "Heiti TC",
-                 "STHeiti", "Songti SC", "Noto Sans CJK SC", "Source Han Sans SC",
-                 "Microsoft YaHei", "SimHei", "WenQuanYi Zen Hei"):
+    # Arial Unicode MS 同时覆盖 CJK 与上标/希腊字母/物理符号，优先级最高，
+    # 避免出现「豆腐块」。其后依次退化到各平台常见中文字体。
+    for name in ("Arial Unicode MS", "Noto Sans CJK SC", "Source Han Sans SC",
+                 "PingFang SC", "Hiragino Sans GB", "Heiti TC", "STHeiti",
+                 "Songti SC", "Microsoft YaHei", "SimHei", "WenQuanYi Zen Hei"):
         if name in installed:
             return name
     return "DejaVu Sans"
