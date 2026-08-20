@@ -91,13 +91,17 @@ def tfim_real(n: int, J: float = 1.0, g: float = 1.0) -> torch.Tensor:
     return Hm
 
 
-def half_chain_entropy(psi: torch.Tensor, n: int, l: int) -> float:
-    """前 l 个格点与其余部分之间的冯·诺依曼熵（以 2 为底）。"""
+def half_chain_entropy(psi: torch.Tensor, n: int, l: int, base: float = 2.0) -> float:
+    """前 l 个格点与其余部分之间的冯·诺依曼熵。
+
+    base=2 → 单位是 ebit；base=e → 单位是 nat（共形场论的标准约定）。
+    对纯态只需做一次 SVD：施密特系数的平方就是约化密度矩阵的本征值。
+    """
     M = psi.reshape(2 ** l, 2 ** (n - l))
-    s = torch.linalg.svdvals(M)
-    p = (s ** 2).clamp_min(1e-16)
+    sv = torch.linalg.svdvals(M)
+    p = (sv ** 2).clamp_min(1e-16)
     p = p / p.sum()
-    return float(-(p * torch.log2(p)).sum())
+    return float(-(p * torch.log(p)).sum() / math.log(base))
 
 
 # ------------------------------------------------------------ 图 1：量子相变
@@ -139,7 +143,7 @@ def fig_quantum_phase_transition():
         ax.plot(gs_vals, gaps[n], color=col, lw=2, label=f"N = {n}")
     ax.axvline(1.0, color=C["red"], ls="--", lw=1.6)
     ax.annotate("链越长，能隙在临界点\n压得越低 → 热力学极限下闭合",
-                xy=(1.0, np.interp(1.0, gs_vals, gaps[12])), xytext=(1.15, 1.1),
+                xy=(1.0, np.interp(1.0, gs_vals, gaps[12])), xytext=(0.10, 1.35),
                 fontsize=9, color=INK_2,
                 arrowprops=dict(arrowstyle="->", color=INK_MUTED, lw=1))
     ax.set_xlabel("横场强度 g / J"); ax.set_ylabel("能隙 E₁ − E₀")
@@ -151,21 +155,41 @@ def fig_quantum_phase_transition():
         ax.plot(gs_vals, ents[n], color=col, lw=2, label=f"N = {n}")
     ax.axvline(1.0, color=C["red"], ls="--", lw=1.6)
     ax.set_xlabel("横场强度 g / J"); ax.set_ylabel("半链纠缠熵 S (ebit)")
-    ax.set_title("③ 纠缠熵在临界点达到极大")
-    ax.text(0.08, 0.72, "远离临界点：面积律\nS ≈ const（只与界面有关）",
-            transform=ax.transAxes, fontsize=9, color=INK_2)
-    ax.legend(title="链长", loc="lower right")
+    ax.set_title("③ 只有临界点上，纠缠熵随链长持续增长")
+    ax.set_ylim(0, 1.45)
+    ax.annotate("有序相：S = 1 ebit\n（两重简并的「猫态」，与 N 无关）",
+                xy=(0.35, 1.0), xytext=(0.10, 1.18), fontsize=8.6, color=INK_2,
+                arrowprops=dict(arrowstyle="->", color=INK_MUTED, lw=0.9))
+    ax.annotate("无序相：S → 0\n（近乎乘积态，与 N 无关）",
+                xy=(1.75, 0.15), xytext=(1.30, 0.42), fontsize=8.6, color=INK_2,
+                arrowprops=dict(arrowstyle="->", color=INK_MUTED, lw=0.9))
+    ax.legend(title="链长", loc="upper right", fontsize=8.5, title_fontsize=8.5)
+
+    # 内插图：临界点上 S ∝ (c/6)·ln N —— 对数发散，正是「涌现的场论」的签名
+    ins = ax.inset_axes([0.42, 0.10, 0.34, 0.34])
+    Sc = [np.interp(1.0, gs_vals, ents[n]) for n in sizes]
+    lnN = np.log(np.array(sizes, dtype=float))
+    k_, b_ = np.polyfit(lnN, Sc, 1)
+    ins.plot(lnN, Sc, "o", ms=5, color=C["orange"])
+    ins.plot(lnN, k_ * lnN + b_, color=C["blue"], lw=1.6)
+    ins.set_title(f"g=1: S ≈ {k_:.3f}·lnN + b", fontsize=7.5, pad=3)
+    ins.set_xlabel("ln N", fontsize=7); ins.set_ylabel("S", fontsize=7)
+    ins.tick_params(labelsize=6.5)
+    print(f"  临界点半链熵对链长的对数斜率 = {k_:.3f} ebit/lnN "
+          f"→ c ≈ {6*k_*math.log(2):.2f}（理论 1/2）")
 
     ax = axes[1, 1]
-    n = 12
-    d2 = np.gradient(np.gradient(np.array(e_dens[n]), gs_vals), gs_vals)
-    ax.plot(gs_vals, e_dens[n], color=C["blue"], lw=2, label="基态能量密度 E₀/N")
-    ax.plot(gs_vals, d2 / abs(d2).max(), color=C["orange"], lw=2,
-            label="二阶导 ∂²(E₀/N)/∂g²（归一化）")
+    for n, col in zip(sizes, ramp):
+        d2 = np.gradient(np.gradient(np.array(e_dens[n]), gs_vals), gs_vals)
+        ax.plot(gs_vals[2:-2], d2[2:-2], color=col, lw=2, label=f"N = {n}")
     ax.axvline(1.0, color=C["red"], ls="--", lw=1.6)
-    ax.set_xlabel("横场强度 g / J"); ax.set_ylabel("能量 / 归一化二阶导")
-    ax.set_title("④ 二阶量子相变：能量连续，二阶导出现奇点")
-    ax.legend(loc="lower left", fontsize=8.5)
+    ax.set_xlabel("横场强度 g / J"); ax.set_ylabel("∂²(E₀/N)/∂g²")
+    ax.set_title("④ 二阶量子相变：能量连续，二阶导趋于奇点")
+    ax.text(0.03, 0.10,
+            "热力学极限下这里是一个真正的发散点；\n"
+            "有限链把它抹圆了，但链越长，极小值越深、越靠近 g=1。",
+            transform=ax.transAxes, fontsize=8.8, color=INK_2, linespacing=1.5)
+    ax.legend(title="链长", loc="lower right", fontsize=8.5, title_fontsize=8.5)
 
     fig.suptitle("横场 Ising 模型：从一串自旋里长出一个相变", fontsize=14,
                  fontweight="bold", y=0.99)
@@ -176,46 +200,61 @@ def fig_quantum_phase_transition():
 
 # ------------------------------------------------------------ 图 2：纠缠熵标度
 def fig_entanglement_scaling():
-    n = 12
+    """临界点上的纠缠熵标度：S(l) = (c/6)·ln[(2L/π)sin(πl/L)] + const（开边界）。
+
+    注意共形场论的约定用自然对数，所以这里的熵一律以 nat 为单位。
+    """
+    n = 16
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(13.0, 4.8))
 
     results = {}
-    for g, col, name in [(0.4, C["blue"], "g=0.4 有序相"),
-                         (1.0, C["orange"], "g=1.0 临界点"),
-                         (2.0, C["aqua"], "g=2.0 无序相")]:
+    for g, col, name in [(0.4, C["blue"], "g=0.4 有序相（面积律）"),
+                         (1.0, C["orange"], "g=1.0 临界点（对数律）"),
+                         (2.0, C["aqua"], "g=2.0 无序相（面积律）")]:
         _, psi0 = lowest(n, 1.0, g, k=2)
         ls = list(range(1, n))
-        S = [half_chain_entropy(psi0, n, l) for l in ls]
-        results[g] = (ls, S)
+        S = [half_chain_entropy(psi0, n, l, base=math.e) for l in ls]
+        results[g] = (np.array(ls), np.array(S))
         ax.plot(ls, S, "o-", color=col, lw=2, ms=6, label=name)
-    ax.set_xlabel("子系统大小 l（链长 L = 12）")
-    ax.set_ylabel("纠缠熵 S(l) (ebit)")
+    ax.set_xlabel(f"子系统大小 l（链长 L = {n}）")
+    ax.set_ylabel("纠缠熵 S(l) (nat)")
     ax.set_title("① 面积律 vs 对数律")
-    ax.legend()
+    ax.text(0.03, 0.72, "远离临界点：S 与 l 无关\n（只取决于「切开几刀」= 面积律）",
+            transform=ax.transAxes, fontsize=9, color=INK_2)
+    ax.legend(loc="center", bbox_to_anchor=(0.55, 0.52), fontsize=8.5)
 
-    # 临界点做共形场论拟合： S = (c/6) ln[(2L/π) sin(πl/L)] + const
-    ls, S = results[1.0]
-    chord = np.log(2 * n / math.pi * np.sin(math.pi * np.array(ls) / n))
-    X = torch.tensor(np.stack([chord, np.ones_like(chord)], 1), dtype=DT)
-    y = torch.tensor(S, dtype=DT)
-    coef = torch.linalg.lstsq(X, y.unsqueeze(1)).solution.squeeze()
-    c_fit = float(coef[0]) * 6
-    print(f"  临界点纠缠熵拟合：中心荷 c = {c_fit:.3f}（理论 1/2，有限尺寸 L={n} 有修正）")
+    def fit_c(L):
+        _, p0 = lowest(L, 1.0, 1.0, k=2)
+        lsL = np.arange(1, L)
+        SL = np.array([half_chain_entropy(p0, L, int(l), base=math.e) for l in lsL])
+        chordL = np.log(2 * L / math.pi * np.sin(math.pi * lsL / L))
+        A = torch.tensor(np.stack([chordL, np.ones_like(chordL)], 1), dtype=DT)
+        sol = torch.linalg.lstsq(A, torch.tensor(SL, dtype=DT).unsqueeze(1)).solution.squeeze()
+        return chordL, SL, float(sol[0]), float(sol[1])
 
-    ax2.plot(chord, S, "o", ms=8, color=C["orange"], label="数值（g=1 临界基态）")
+    chord, S, slope, intercept = fit_c(n)
+    c_fit = 6 * slope
+    trend = [(L, 6 * fit_c(L)[2]) for L in (8, 10, 12, 14, 16)]
+    print("  中心荷拟合随链长的收敛： " +
+          "，".join(f"L={L}: c={cc:.3f}" for L, cc in trend) + "（理论 1/2）")
+
+    ax2.plot(chord, S, "o", ms=8, color=C["orange"], label=f"数值（L={n} 临界基态）")
     xx = np.linspace(chord.min(), chord.max(), 50)
-    ax2.plot(xx, float(coef[0]) * xx + float(coef[1]), color=C["blue"], lw=2,
-             label=f"CFT 拟合：斜率 c/6 → c = {c_fit:.3f}")
-    ax2.plot(xx, 0.5 / 6 * xx + float(coef[1]) + (c_fit - 0.5) / 6 * chord.mean() * 0,
-             color=INK_MUTED, lw=1.6, ls="--", label="理论斜率 c = 1/2")
-    ax2.set_xlabel("ln[(2L/π)·sin(πl/L)]  （共形弦长）")
-    ax2.set_ylabel("S(l)")
+    ax2.plot(xx, slope * xx + intercept, color=C["blue"], lw=2,
+             label=f"最小二乘拟合：c = 6×斜率 = {c_fit:.3f}")
+    ax2.plot(xx, (0.5 / 6) * (xx - chord.mean()) + S.mean(),
+             color=INK_MUTED, lw=1.8, ls="--", label="理论斜率 c = 1/2")
+    ax2.set_xlabel("ln[(2L/π)·sin(πl/L)]   （共形弦长）")
+    ax2.set_ylabel("S(l) (nat)")
     ax2.set_title("② 临界点上「涌现」出共形对称性")
-    ax2.legend(loc="upper left", fontsize=8.8)
-    ax2.text(0.98, 0.06, "一串离散的自旋，在临界点上\n表现得像一个连续的相对论性场论",
-             transform=ax2.transAxes, ha="right", fontsize=9, color=INK_2)
+    ax2.legend(loc="upper left", fontsize=8.6)
+    ax2.text(0.97, 0.06,
+             "有限尺寸下 c 收敛得很慢：\n"
+             + "  ".join(f"L={L}→{cc:.2f}" for L, cc in trend[1:])
+             + "\n一串离散自旋在临界点上表现得像一个连续场论",
+             transform=ax2.transAxes, ha="right", fontsize=8.6, color=INK_2, linespacing=1.6)
     return finish(fig, "07_entanglement_scaling.png",
-                  "c=1/2 是伊辛普适类的中心荷：微观细节（晶格、耦合形式）全被洗掉，只剩下普适的临界行为——这就是涌现")
+                  "c=1/2 是伊辛普适类的中心荷：微观细节（晶格常数、耦合的具体形式）全被洗掉，只剩普适的临界行为——这就是涌现")
 
 
 # ------------------------------------------------------------ 图 3：退相干
