@@ -85,8 +85,12 @@ def deutsch_jozsa(n: int, kind: str):
     xs = torch.arange(dim)
     if kind == "constant":
         fx = torch.zeros(dim, dtype=torch.long)
-    else:                                            # 平衡：f(x) = x 的最低位
-        fx = (xs & 1).long()
+    else:
+        # 随机平衡函数：一半输入映到 0，一半映到 1
+        g = torch.Generator().manual_seed(5)
+        perm = torch.randperm(dim, generator=g)
+        fx = torch.zeros(dim, dtype=torch.long)
+        fx[perm[: dim // 2]] = 1
     phase = torch.where(fx == 1, -1.0, 1.0).to(CT).reshape((2,) * n)
     psi = psi * phase.unsqueeze(-1)
     for i in range(n):
@@ -113,15 +117,16 @@ def fig_dj_and_qft():
     pb = deutsch_jozsa(n, "balanced").numpy()
     xpos = np.arange(2 ** n)
     ax.bar(xpos - 0.2, pc, width=0.4, color=C["blue"], label="常数函数 f ≡ 0")
-    ax.bar(xpos + 0.2, pb, width=0.4, color=C["orange"], label="平衡函数 f(x)=x₀")
+    ax.bar(xpos + 0.2, pb, width=0.4, color=C["orange"], label="平衡函数（随机一半 0 一半 1）")
     ax.set_xticks(xpos); ax.set_xticklabels(labels, rotation=90, fontsize=7)
     ax.set_ylabel("测量概率")
     ax.set_xlabel("第一寄存器的测量结果")
     ax.set_title("③ Deutsch-Jozsa：一次查询就分辨出来")
-    ax.annotate("常数 → 100% 落在 |0000〉", (0, pc[0]), xytext=(3.4, 0.86),
+    ax.annotate("常数 → 100% 落在 |0000〉", (0, pc[0]), xytext=(2.6, 0.72),
                 fontsize=9, color=C["blue"],
                 arrowprops=dict(arrowstyle="->", color=C["blue"], lw=1))
-    ax.annotate("平衡 → 绝不会是 |0000〉", (1, pb[1]), xytext=(4.4, 0.55),
+    ax.annotate(f"平衡 → |0000〉的概率严格为 0\n（这里是 {pb[0]:.0e}，纯属浮点误差）",
+                (0.2, 0.0), xytext=(2.6, 0.40),
                 fontsize=9, color=C["orange"],
                 arrowprops=dict(arrowstyle="->", color=C["orange"], lw=1))
     ax.text(0.5, -0.42, "经典确定性算法最坏需要 2^{n-1}+1 = 9 次查询；量子只要 1 次",
@@ -151,16 +156,17 @@ def fig_dj_and_qft():
         if k:
             ax.text(pk + 4, prob.max() * 0.9, f"k·2ⁿ/r = {pk:.0f}", fontsize=8,
                     color=C["orange"], rotation=90, va="top")
+    ax.set_ylim(0, prob.max() * 1.55)
     ax.set_xlabel("量子傅里叶变换输出（第一寄存器测量值）")
     ax.set_ylabel("概率")
     ax.set_title(f"④ QFT 找周期：峰值间距 = 2ⁿ/r（r = {r}）")
-    ax.text(0.98, 0.60,
+    ax.text(0.5, 0.97,
             f"a^x mod M：a={a}, M={M}\n"
             f"周期 r = {r}（量子部分只负责找出它）\n"
             f"再用连分数 + gcd 得到 M 的因子：\n"
             f"gcd(a^(r/2)±1, M) = {math.gcd(pow(a, r // 2, M) - 1, M)}, "
             f"{math.gcd(pow(a, r // 2, M) + 1, M)}",
-            transform=ax.transAxes, ha="right", fontsize=9, color=INK,
+            transform=ax.transAxes, ha="center", va="top", fontsize=9, color=INK,
             bbox=dict(boxstyle="round,pad=0.5", fc="#eef4fd", ec=C["blue"], lw=1),
             linespacing=1.5)
     print(f"  QFT 找周期：a={a}, M={M} → r={r}，因子 = "
@@ -230,7 +236,7 @@ def fig_grover():
             label="经典随机试探（同样的查询次数）")
     ax.axvline(opt, color=C["red"], ls=":", lw=1.6)
     ax.annotate(f"最优迭代次数 ≈ (π/4)√N = {opt}\n此时 P = {probs[opt][marked]:.4f}",
-                xy=(opt, probs[opt][marked]), xytext=(opt + 6, 0.62),
+                xy=(opt, probs[opt][marked]), xytext=(opt + 4, 0.46),
                 fontsize=9.5, color=C["red"],
                 arrowprops=dict(arrowstyle="->", color=C["red"], lw=1))
     ax.text(2 * opt - 2, 0.10, "继续转就转过头了\n（振幅是旋转，不是单调增长）",
@@ -248,7 +254,7 @@ def fig_grover():
     ax.set_xlabel("数据库规模 n（比特）"); ax.set_ylabel("查询次数（对数轴）")
     ax.set_title("⑥ 平方加速")
     ax.legend(fontsize=8.5)
-    ax.text(0.04, 0.06, "n=40：经典 5×10¹¹ 次\n格罗弗 8×10⁵ 次",
+    ax.text(0.04, 0.72, "n=40：经典 5×10¹¹ 次\n格罗弗 8×10⁵ 次",
             transform=ax.transAxes, fontsize=9, color=INK_2)
 
     print(f"  格罗弗：N={N}，最优迭代 {opt} 次后命中概率 = {probs[opt][marked]:.4f}")
