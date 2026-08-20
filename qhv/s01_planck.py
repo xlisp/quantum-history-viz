@@ -159,15 +159,15 @@ def fig_mean_energy():
 
     fig, ax = plt.subplots(figsize=(7.6, 4.6))
     ax.semilogx(x, classical, color=C["red"], ls="--", lw=2,
-                label="经典能均分：⟨E⟩ = k_BT")
+                label="经典能均分：〈E〉 = k_BT")
     ax.semilogx(x, quantum, color=C["blue"], lw=2.4,
-                label="普朗克振子：⟨E⟩ = hν/(e^{hν/k_BT} − 1)")
+                label="普朗克振子：〈E〉 = hν/(e^{hν/k_BT} − 1)")
     ax.fill_between(x.numpy(), quantum.numpy(), classical.numpy(),
                     color=C["blue"], alpha=0.08)
     ax.axvline(1.0, color=INK_MUTED, lw=1, ls=":")
     ax.text(1.08, 0.55, "hν ≈ k_BT\n高频模式开始被「冻结」", fontsize=9, color=INK_2)
     ax.set_xlabel("x = hν / k_BT  （频率↑ 或 温度↓）")
-    ax.set_ylabel("⟨E⟩ / k_BT")
+    ax.set_ylabel("〈E〉 / k_BT")
     ax.set_ylim(0, 1.15)
     ax.set_title("能量为什么必须「一份一份」：高频模式被冻结")
     ax.legend(loc="lower left")
