@@ -158,8 +158,10 @@ def fig_zitterbewegung():
     fft = np.abs(np.fft.rfft(trembling - trembling.mean()))
     freqs = 2 * np.pi * np.fft.rfftfreq(len(ts_np), d=float(ts_np[1] - ts_np[0]))
     w_peak = freqs[np.argmax(fft)]
-    print(f"  颤动频率 ω_Z(数值) = {w_peak:.3f}，理论 2mc²/ħ = {2*m*c**2:.3f}")
-    print(f"  颤动幅度 ≈ {amp:.3f} 康普顿波长 ħ/mc（约 3.9×10⁻¹³ m）")
+    w_theory = 2 * math.sqrt(k0 ** 2 + (m * c) ** 2)      # ω_Z = 2E(k)/ħ ≥ 2mc²/ħ
+    print(f"  颤动频率 ω_Z(数值) = {w_peak:.3f}，理论 2E(k₀)/ħ = {w_theory:.3f}"
+          f"（下限 2mc²/ħ = {2*m*c**2:.1f}，FFT 频率分辨率 ±{2*math.pi/30:.2f}）")
+    print(f"  颤动幅度 ≈ {amp:.3f} ħ/mc ≈ {amp*3.86e-13:.1e} m")
 
     fig = plt.figure(figsize=(13.2, 7.4))
     gs = fig.add_gridspec(2, 2, height_ratios=[1, 1], hspace=0.36, wspace=0.22)
@@ -186,8 +188,9 @@ def fig_zitterbewegung():
     ax.set_xlabel("t"); ax.set_ylabel("〈x〉 − 漂移")
     ax.set_title("② 扣掉漂移后：Zitterbewegung 颤动")
     ax.text(0.02, 0.04,
-            f"数值主频 ω = {w_peak:.2f}   理论 2mc²/ħ = {2*m*c**2:.2f}\n"
-            f"周期 T = πħ/mc² ≈ {per:.2f}（虚线）\n幅度 ≈ {amp:.2f} ħ/mc ≈ 4×10⁻¹³ m",
+            f"数值主频 ω = {w_peak:.2f}，理论 ω_Z = 2E(k₀)/ħ = {w_theory:.2f}\n"
+            f"下限 2mc²/ħ = {2*m*c**2:.1f}；虚线为周期 πħ/mc² = {per:.2f}\n"
+            f"幅度 ≈ {amp:.2f} ħ/mc ≈ {amp*3.86e-13:.0e} m",
             transform=ax.transAxes, fontsize=9, color=INK,
             bbox=dict(boxstyle="round,pad=0.45", fc="#fdf1ea", ec=C["orange"], lw=1))
     return finish(fig, "05_zitterbewegung.png",
