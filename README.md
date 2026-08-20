@@ -590,3 +590,166 @@ Eve 做截取-重发时，有 1/2 概率选错基，选错时 Bob 又有 1/2 概
 （但工程实现可能有侧信道漏洞——真实攻击都打在探测器和光源上，不是打在协议上。）
 
 ![BB84](figures/10_bb84_qkd.png)
+
+---
+
+# 第三部分：量子力学就在你身边
+
+「量子力学只在实验室里」是个错觉。粗略估计，**发达经济体约三分之一的 GDP
+依赖于直接建立在量子力学之上的技术**。挑几个你今天一定用到过的：
+
+| 你用的东西 | 背后的量子力学 | 对应章节 |
+|---|---|---|
+| CPU / 内存里的每只晶体管 | 能带论、掺杂、费米-狄拉克统计 | 第 8 章 |
+| 手机闪存 / SSD | Fowler-Nordheim 隧穿把电子打进浮栅 | 第 8 章 |
+| 电源里的稳压二极管 | 齐纳击穿（带间隧穿）| 第 8 章 |
+| LED 灯 / 手机屏幕 | 直接带隙半导体的电子-空穴复合发光 | 第 8 章 |
+| 激光笔 / 光纤通信 / 蓝光 | 受激辐射（爱因斯坦 1917 年提出）| 第 1、2 章 |
+| 手机摄像头 / 太阳能电池 | 光电效应 | 第 2 章 |
+| 硬盘读头 / MRAM | 巨磁阻与自旋相关隧穿 | 第 8 章 |
+| GPS 定位 | 铯原子钟的超精细跃迁（定义了「秒」）| 第 2 章 |
+| 医院的 MRI | 核自旋在磁场中的塞曼分裂与射频跃迁 | 第 4 章 |
+| 化学、材料、制药 | 分子轨道、化学键本质上是电子的量子行为 | 第 3 章 |
+| 银行卡的抗量子升级 | 后量子密码 / QKD | 第 9、10 章 |
+| 你没被椅子吸进去 | 泡利不相容原理 | 第 4 章 |
+
+还有一些「宏观量子现象」，直接把量子效应放大到人眼可见的尺度：
+超导（零电阻、迈斯纳效应、约瑟夫森结）、超流氦（爬墙、喷泉效应）、
+玻色-爱因斯坦凝聚、中子星靠中子简并压抵抗引力、白矮星的钱德拉塞卡极限。
+
+---
+
+# 第四部分：六个常见误解
+
+**1. 「观测需要有意识的观察者。」**
+不需要。任何让系统与足够多的环境自由度发生不可逆纠缠的过程都算测量——
+一个光子撞上探测器就够了，宇宙在有生命之前一直在「自我测量」。
+第 7 章的退相干计算就是这件事的定量版本。
+
+**2. 「纠缠可以超光速传信。」**
+不能，而且这是可以证明的。本项目数值验证：Bob 无论怎么改测量方向，
+Alice 的边缘概率变化严格为 $0.00\times10^0$。关联要等经典信道送来另一半才看得见。
+
+**3. 「隧穿违反能量守恒，粒子借了能量再还回去。」**
+不违反。粒子从来没有在势垒里被「发现」带着负动能——
+在势垒区波函数是指数衰减的隐失波，不是一个有定义动能的粒子。
+能量守恒在整个过程中严格成立。
+
+**4. 「量子计算机同时尝试所有可能的答案。」**
+这是最流行的错误图像。$2^N$ 个振幅确实同时演化，但**测量只输出 $N$ 个比特**。
+算法的全部艺术在于用干涉让错误答案相消。所以无结构搜索只能拿到平方加速（格罗弗），
+而且这个平方是**可证明最优**的——没有更好的量子算法了。
+
+**5. 「薛定谔的猫说明宏观物体常处于叠加态。」**
+恰恰相反。薛定谔造这个例子是为了**归谬**——他觉得这荒谬。
+今天的答案是退相干：宏观物体与环境的耦合让叠加在 $10^{-20}$ 秒尺度上消失。
+猫不在叠加态，不是因为量子力学在大尺度失效，而是因为它在大尺度**效率太高**。
+
+**6. 「不确定性原理是因为测量会扰动系统。」**
+测量扰动是真实存在的另一回事。$\sigma_x\sigma_p\ge\hbar/2$ 说的是
+**态本身**的性质：任何一个量子态，它的位置分布宽度和动量分布宽度的乘积
+就有下界，哪怕你根本不去测。这是傅里叶变换的数学恒等式。
+
+---
+
+# 第五部分：速查表
+
+### 常数
+
+| 符号 | 数值 | 含义 |
+|---|---|---|
+| $h$ | $6.62607015\times10^{-34}$ J·s | 普朗克常数（2019 年起用于**定义**千克）|
+| $\hbar=h/2\pi$ | $1.054572\times10^{-34}$ J·s | 约化普朗克常数，角动量的自然单位 |
+| $k_B$ | $1.380649\times10^{-23}$ J/K | 玻尔兹曼常数；室温 $k_BT=25.85$ meV |
+| $\alpha$ | $1/137.036$ | 精细结构常数，电磁相互作用强度 |
+| $E_{\rm Ry}$ | 13.606 eV | 里德伯能量，氢原子基态结合能 |
+| $\lambda_C=h/mc$ | 2.426 pm | 电子康普顿波长（颤动的尺度）|
+| $a_0$ | 52.9 pm | 玻尔半径 |
+
+### 核心公式
+
+| 公式 | 名字 | 章节 |
+|---|---|---|
+| $E=h\nu$ | 普朗克-爱因斯坦关系 | 1, 2 |
+| $\lambda=h/p$ | 德布罗意关系 | 2 |
+| $i\hbar\,\partial_t\psi=\hat H\psi$ | 薛定谔方程 | 3 |
+| $P(x)=\|\psi(x)\|^2$ | 玻恩规则 | 3 |
+| $[\hat x,\hat p]=i\hbar$ | 正则对易关系 | 4 |
+| $\sigma_x\sigma_p\ge\hbar/2$ | 不确定性原理 | 4 |
+| $(i\hbar\gamma^\mu\partial_\mu-mc)\psi=0$ | 狄拉克方程 | 5 |
+| $S=-\mathrm{Tr}\rho\log\rho$ | 冯·诺依曼熵 / 纠缠度 | 6 |
+| $\|S_{\rm CHSH}\|\le2$（经典）/ $2\sqrt2$（量子）| 贝尔-CHSH 不等式 | 6 |
+| $T\approx e^{-2\kappa a}$ | 隧穿透射率 | 3, 8 |
+| $E_{\rm gap}=2\|V_1\|$ | 近自由电子能隙 | 8 |
+| $n_i\propto e^{-E_g/2k_BT}$ | 本征载流子浓度 | 8 |
+| $J_{\rm FN}=AE^2e^{-B/E}$ | Fowler-Nordheim 隧穿 | 8 |
+| $60$ mV/dec | 亚阈值摆幅的玻尔兹曼极限 | 8 |
+
+---
+
+# 第六部分：代码结构
+
+```
+quantum-history-viz/
+├── run_all.py              # 一键跑完 11 章，输出 31 张图
+├── requirements.txt
+├── figures/                # 全部输出
+├── site/                   # 单文件网页版（图片内联为 base64）
+│   ├── template.html
+│   └── build_site.py
+└── qhv/
+    ├── qlib.py             # 用 PyTorch 从零写的量子模拟库
+    ├── style.py            # 中文字体 + 通过色盲校验的配色
+    ├── s01_planck.py  …  s11_timeline.py
+```
+
+`qhv/qlib.py` 是全项目的地基，约 200 行：
+
+* 态矢量用形状 `(2,)*n` 的 `complex128` 张量表示，第 $k$ 个轴 = 第 $k$ 个量子比特；
+  **施加量子门 = 对某几个轴做张量收缩**，因此天然可微（VQE 就靠这一点）
+* 单/双比特门（H, X, Y, Z, S, T, Rx/Ry/Rz, CNOT, CZ, SWAP）
+* 偏迹、冯·诺依曼熵、纯度、保真度、布洛赫矢量
+* 多体算符与横场 Ising 哈密顿量
+
+数值方法一览：
+
+| 方法 | 用在哪 | 实现 |
+|---|---|---|
+| 自动微分 + Adam | 反演 $h,k_B$；光电效应斜率；VQE | `torch.autograd` |
+| 有限差分 + 稠密对角化 | 定态薛定谔方程；能带结构 | `torch.linalg.eigh` |
+| split-step 傅里叶 | 波包演化、隧穿、狄拉克方程 | `torch.fft` |
+| 稀疏 Lanczos | 多体基态（$N\le16$）| `scipy.sparse.linalg.eigsh` |
+| SVD → 施密特分解 | 纠缠熵 | `torch.linalg.svdvals` |
+| 二分法求根 | 半导体的电中性方程 / 费米能级 | 纯 Python |
+| 蒙特卡洛抽样 | 双缝、CHSH 实验、BB84 | `torch.multinomial` |
+
+### 每一章都会打印可核对的数字
+
+```
+$ python run_all.py 8
+  带隙数值 vs 微扰论 2|V₁|（小势区）最大偏差 = 0.001
+  n_i(300K) 硅 Si: 6.68e+09 cm⁻³
+  SiO₂ 衰减常数 κ = 6.38 nm⁻¹  →  每薄 0.1 nm，漏电 ×3.6
+  F-N 参数 B = 263.6 MV/cm
+  V_BR：N=1e15 → 347 V；N=1e18 → 1.9 V
+  温度系数过零点 ≈ 5.57 V（实测典型值 5.6 V）
+```
+
+---
+
+## 参考
+
+* M. Planck, *Zur Theorie des Gesetzes der Energieverteilung im Normalspectrum* (1900)
+* A. Einstein, *Über einen die Erzeugung und Verwandlung des Lichtes betreffenden heuristischen Gesichtspunkt* (1905)
+* P. A. M. Dirac, *The Quantum Theory of the Electron*, Proc. R. Soc. A **117**, 610 (1928)
+* A. Einstein, B. Podolsky, N. Rosen, Phys. Rev. **47**, 777 (1935)
+* J. S. Bell, *On the Einstein Podolsky Rosen Paradox*, Physics **1**, 195 (1964)
+* P. W. Anderson, *More Is Different*, Science **177**, 393 (1972)
+* W. H. Zurek, *Decoherence, einselection, and the quantum origins of the classical*, RMP **75**, 715 (2003)
+* R. P. Feynman, *Simulating Physics with Computers*, IJTP **21**, 467 (1982)
+* P. Calabrese, J. Cardy, *Entanglement entropy and quantum field theory*, JSTAT (2004)
+* C. H. Bennett, G. Brassard, *Quantum cryptography: Public key distribution and coin tossing* (1984)
+* S. M. Sze, K. K. Ng, *Physics of Semiconductor Devices*, 3rd ed. (2007) —— 第 8 章的击穿与隧穿公式
+* L. Esaki, *New Phenomenon in Narrow Germanium p-n Junctions*, Phys. Rev. **109**, 603 (1958)
+* R. Chau et al., *High-κ/metal-gate stack and its MOSFET characteristics*, IEEE EDL **25**, 408 (2004)
+* X. Fan et al., *Measurement of the Electron Magnetic Moment*, PRL **130**, 071801 (2023)
