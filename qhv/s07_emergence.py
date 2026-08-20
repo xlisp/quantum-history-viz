@@ -166,7 +166,7 @@ def fig_quantum_phase_transition():
     ax.legend(title="链长", loc="upper right", fontsize=8.5, title_fontsize=8.5)
 
     # 内插图：临界点上 S ∝ (c/6)·ln N —— 对数发散，正是「涌现的场论」的签名
-    ins = ax.inset_axes([0.42, 0.10, 0.34, 0.34])
+    ins = ax.inset_axes([0.07, 0.10, 0.30, 0.32])
     Sc = [np.interp(1.0, gs_vals, ents[n]) for n in sizes]
     lnN = np.log(np.array(sizes, dtype=float))
     k_, b_ = np.polyfit(lnN, Sc, 1)
@@ -185,7 +185,7 @@ def fig_quantum_phase_transition():
     ax.axvline(1.0, color=C["red"], ls="--", lw=1.6)
     ax.set_xlabel("横场强度 g / J"); ax.set_ylabel("∂²(E₀/N)/∂g²")
     ax.set_title("④ 二阶量子相变：能量连续，二阶导趋于奇点")
-    ax.text(0.03, 0.10,
+    ax.text(0.03, 0.84,
             "热力学极限下这里是一个真正的发散点；\n"
             "有限链把它抹圆了，但链越长，极小值越深、越靠近 g=1。",
             transform=ax.transAxes, fontsize=8.8, color=INK_2, linespacing=1.5)
@@ -270,8 +270,11 @@ def fig_decoherence(seed: int = 11):
         ax.plot(t, coh, color=SERIES[i], lw=2, label=f"环境自由度 N = {N}")
     ax.set_xlabel("时间 t"); ax.set_ylabel("相干性 |ρ₀₁(t)| / |ρ₀₁(0)|")
     ax.set_title("① 环境越大，叠加消失得越快")
-    ax.set_ylim(0, 1.02)
-    ax.legend(fontsize=8.5)
+    ax.set_ylim(0, 1.02); ax.set_xlim(0, 6)
+    ax.annotate("小环境会「回光返照」（庞加莱回归）；\n环境一大，复原时间就长得没有意义了",
+                xy=(3.7, 1.0), xytext=(1.5, 0.62), fontsize=8.6, color=INK_2,
+                arrowprops=dict(arrowstyle="->", color=INK_MUTED, lw=0.9))
+    ax.legend(fontsize=8.5, loc="center right")
 
     ax = axes[1]
     Ns = np.array([1, 2, 4, 8, 16, 32, 64, 128, 256, 512])
@@ -303,7 +306,8 @@ def fig_decoherence(seed: int = 11):
         for r in range(2):
             for c_ in range(2):
                 sub.text(c_, r, f"{rho[r,c_]:.2f}", ha="center", va="center",
-                         fontsize=9, color=INK)
+                         fontsize=9,
+                         color="white" if abs(rho[r, c_]) > 0.3 else INK)
         sub.set_xticks([]); sub.set_yticks([]); sub.grid(False)
         sub.set_title(f"t = {tv}\n相干度 {coh:.2f}", fontsize=9)
     ax.axis("off")
