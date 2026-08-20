@@ -100,21 +100,25 @@ def fig_bohr():
 
     for i, e in enumerate(E, start=1):
         ax.hlines(e, 0.05, 0.95, color=INK_2, lw=1.6)
-        ax.text(0.97, e, f"n={i}   {e:.2f} eV", va="center", fontsize=9, color=INK_2)
+        if i <= 4:
+            ax.text(0.97, e, f"n={i}   {e:.2f} eV", va="center", fontsize=9, color=INK_2)
+    ax.text(0.97, -0.30, "n=5,6,7…  能级密集堆积", va="center", fontsize=9, color=INK_MUTED)
     ax.hlines(0, 0.05, 0.95, color=INK_MUTED, lw=1.2, ls="--")
-    ax.text(0.97, 0.15, "n=∞  电离 (0 eV)", fontsize=9, color=INK_MUTED)
+    ax.text(0.97, 0.55, "n=∞  电离 (0 eV)", fontsize=9, color=INK_MUTED)
 
-    series = [("莱曼系 (紫外)", 1, C["violet"], 0.18),
-              ("巴尔末系 (可见)", 2, C["aqua"], 0.45),
-              ("帕邢系 (红外)", 3, C["orange"], 0.72)]
-    for label, nf, col, x in series:
-        for ni in range(nf + 1, 7):
+    series = [("莱曼系\n(紫外)", 1, C["violet"], 0.12),
+              ("巴尔末系\n(可见)", 2, C["aqua"], 0.42),
+              ("帕邢系\n(红外)", 3, C["orange"], 0.72)]
+    for label, nf, col, x0 in series:
+        for j, ni in enumerate(range(nf + 1, 7)):
+            x = x0 + j * 0.045
             ax.add_patch(FancyArrowPatch((x, E[ni - 1]), (x, E[nf - 1]),
-                                         arrowstyle="-|>", mutation_scale=11,
-                                         color=col, lw=1.4, alpha=0.85))
-        ax.text(x, 1.2, label, ha="center", fontsize=9.5, color=col, fontweight="bold")
-    ax.set_ylim(-14.6, 2.4)
-    ax.set_xlim(0, 1.5)
+                                         arrowstyle="-|>", mutation_scale=10,
+                                         color=col, lw=1.5, alpha=0.9))
+        ax.text(x0 + 0.07, 1.35, label, ha="center", va="center", fontsize=9.5,
+                color=col, fontweight="bold", linespacing=1.35)
+    ax.set_ylim(-14.9, 2.6)
+    ax.set_xlim(0, 1.55)
     ax.set_xticks([])
     ax.set_ylabel("能量 E (eV)")
     ax.set_title("玻尔氢原子能级  E_n = −13.606/n² eV")
@@ -131,8 +135,12 @@ def fig_bohr():
         col = wavelength_to_rgb(lam_nm)
         ax2.axvline(lam_nm, color=col, lw=2.6 if ni < 7 else 1.4)
         if ni <= 6:
-            ax2.text(lam_nm, 0.92, f"H{'αβγδ'[ni-3]}\n{lam_nm:.1f} nm",
-                     rotation=0, ha="center", va="top", fontsize=8.5, color="white")
+            ytxt = [0.93, 0.93, 0.78, 0.63][ni - 3]
+            right = lam_nm > 600
+            ax2.text(lam_nm + (-5 if right else 5), ytxt,
+                     f"H{'αβγδ'[ni-3]}  {lam_nm:.1f} nm",
+                     ha="right" if right else "left", va="top",
+                     fontsize=8.5, color="white")
     ax2.set_xlim(360, 700)
     ax2.set_ylim(0, 1)
     ax2.set_yticks([])
