@@ -168,7 +168,7 @@ def fig_teleportation(seed: int = 2):
                         color="white", fontsize=10)
     ax.grid(False)
     print(f"  超密编码：解码矩阵 = 单位阵，最小对角元 = {dec.diagonal().min():.6f}")
-    return finish(fig, "09_teleportation.png",
+    return finish(fig, "10_teleportation.png",
                   "隐形传态传的是「态」不是物质，原件在测量中被销毁（与无克隆定理自洽）；必须等经典信息到达才能重建，所以不能超光速")
 
 
@@ -254,7 +254,7 @@ def fig_bb84(seed: int = 4):
                         "而依赖无克隆定理与测量扰动 ——\n量子计算机再强也破不了。",
             transform=ax.transAxes, ha="right", va="top", fontsize=8.8,
             color=INK_2, linespacing=1.5)
-    return finish(fig, "09_bb84_qkd.png",
+    return finish(fig, "10_bb84_qkd.png",
                   "截取-重发时 Eve 有 1/2 概率选错基，选错时 Bob 又有 1/2 概率读错 → 筛选后误码率 = η/4，全拦截即 25%")
 
 

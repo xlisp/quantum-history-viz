@@ -69,7 +69,7 @@ def fig_qubit_and_scaling():
     ax.set_title("② 为什么要造量子计算机：2^N 的墙")
     ax.legend(loc="lower right", fontsize=9)
     print("  50 个量子比特的态矢量需要 %.1f PB 内存" % (2 ** 50 * 16 / 2 ** 50))
-    return finish(fig, "08_qubit_bloch_scaling.png",
+    return finish(fig, "09_qubit_bloch_scaling.png",
                   "注意：2^N 大 ≠ 量子计算无所不能——测量只能拿到 N 个比特的结果，算法必须靠干涉把答案「挤」到少数几个基态上")
 
 
@@ -171,7 +171,7 @@ def fig_dj_and_qft():
             linespacing=1.5)
     print(f"  QFT 找周期：a={a}, M={M} → r={r}，因子 = "
           f"{math.gcd(pow(a, r//2, M)-1, M)} × {math.gcd(pow(a, r//2, M)+1, M)}")
-    return finish(fig, "08_dj_qft.png",
+    return finish(fig, "09_dj_qft.png",
                   "肖尔算法把「分解大数」化归为「找周期」，而找周期正是傅里叶变换最擅长的事——量子并行 + 干涉相消，答案自己浮出来")
 
 
@@ -258,7 +258,7 @@ def fig_grover():
             transform=ax.transAxes, fontsize=9, color=INK_2)
 
     print(f"  格罗弗：N={N}，最优迭代 {opt} 次后命中概率 = {probs[opt][marked]:.4f}")
-    return finish(fig, "08_grover.png",
+    return finish(fig, "09_grover.png",
                   "格罗弗迭代 = 二维平面内的旋转，每次转 2·arcsin(1/√N)；转到 90° 就该停手——这也是它的最优性证明")
 
 
@@ -327,7 +327,7 @@ def fig_vqe():
              + "\n".join(f"    {l} 层 → E = {e:.6f}   (精确 {ex:.6f}，误差 {abs(e/ex-1)*100:.3f}%)"
                          for l, e, ex in finals),
              fontsize=9.6, color=INK_2, linespacing=1.65, family="monospace")
-    return finish(fig, "08_vqe.png",
+    return finish(fig, "09_vqe.png",
                   "VQE / QAOA 属于「含噪中等规模量子（NISQ）」路线：浅电路 + 经典优化，是当下真机上最现实的算法家族")
 
 

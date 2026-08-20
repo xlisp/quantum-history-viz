@@ -32,8 +32,9 @@ EVENTS = [
     (1928, "狄拉克方程\n预言反物质"),
     (1932, "冯·诺依曼《数学基础》\n安德森发现正电子"),
     (1935, "EPR 佯谬\n薛定谔的猫"),
-    (1947, "兰姆位移 → QED 重整化\n(施温格/费曼/朝永, 1948)"),
-    (1957, "埃弗雷特：多世界诠释\nBCS 超导理论"),
+    (1947, "兰姆位移 → QED 重整化\n同年：第一只晶体管\n(巴丁/布拉顿/肖克利)"),
+    (1957, "埃弗雷特：多世界诠释\nBCS 超导理论\n江崎二极管（隧穿负阻）"),
+    (1971, "Intel 4004 微处理器\n能带论变成一个产业"),
     (1964, "贝尔不等式\n把哲学争论变成实验"),
     (1972, "Freedman-Clauser\n首次检验贝尔不等式"),
     (1982, "阿斯佩实验\n无克隆定理\n费曼提出量子模拟"),
@@ -45,6 +46,7 @@ EVENTS = [
     (1997, "首次隐形传态实验\n(因斯布鲁克)"),
     (2015, "无漏洞贝尔实验\n(Delft/NIST/维也纳)"),
     (2016, "墨子号量子科学实验卫星"),
+    (2007, "45nm 改用 HfO₂ 高 k 介质\n栅氧隧穿逼停了「继续减薄」"),
     (2019, "谷歌宣称量子优越性"),
     (2020, "九章光量子计算原型机"),
     (2022, "诺贝尔物理学奖：\n阿斯佩、克劳泽、蔡林格"),
@@ -74,9 +76,9 @@ PEOPLE = [
 
 
 def fig_timeline():
-    fig, ax = plt.subplots(figsize=(17.5, 8.4))
+    fig, ax = plt.subplots(figsize=(17.5, 8.8))
     ax.set_xlim(1896, 2030)
-    ax.set_ylim(-5.6, 5.6)
+    ax.set_ylim(-6.3, 6.5)
     ax.axis("off")
 
     for name, a, b, col in ERAS:
@@ -86,8 +88,8 @@ def fig_timeline():
     # 时代图例单独放一行，避免和事件连线抢地方
     for i, (name, a, b, col) in enumerate(ERAS):
         x0 = 1899 + i * 33
-        ax.add_patch(plt.Rectangle((x0, 5.15), 3.2, 0.30, fc=col, alpha=0.55, lw=0))
-        ax.text(x0 + 4.2, 5.30, f"{name}  {a if a > 1898 else 1900}–{b if b < 2026 else '今'}",
+        ax.add_patch(plt.Rectangle((x0, 5.85), 3.2, 0.30, fc=col, alpha=0.55, lw=0))
+        ax.text(x0 + 4.2, 6.00, f"{name}  {a if a > 1898 else 1900}–{b if b < 2026 else '今'}",
                 ha="left", va="center", fontsize=10, color=col, fontweight="bold")
 
     def era_color(year):
@@ -96,24 +98,25 @@ def fig_timeline():
                 return col
         return INK_MUTED
 
-    levels_up = [1.15, 2.35, 3.55, 4.75]
-    levels_dn = [-1.15, -2.35, -3.55, -4.75]
-    up_last, dn_last = -999, -999
-    up_i, dn_i = 0, 0
+    levels_up = [1.15, 2.40, 3.65, 4.90, 6.15]
+    levels_dn = [-1.15, -2.40, -3.65, -4.90, -6.15]
+    # 每个层级记录上一个事件的年份：只有拉开 MIN_GAP 年才复用同一层，避免文字框重叠
+    MIN_GAP = 13
+    occ_up = [-999.0] * len(levels_up)
+    occ_dn = [-999.0] * len(levels_dn)
     for k, (year, text) in enumerate(EVENTS):
         col = era_color(year)
-        if k % 2 == 0:
-            up_i = (up_i + 1) % len(levels_up) if year - up_last < 12 else 0
-            y = levels_up[up_i]; up_last = year
-            va = "bottom"
-        else:
-            dn_i = (dn_i + 1) % len(levels_dn) if year - dn_last < 12 else 0
-            y = levels_dn[dn_i]; dn_last = year
-            va = "top"
+        up = (k % 2 == 0)
+        occ, levels = (occ_up, levels_up) if up else (occ_dn, levels_dn)
+        idx = next((i for i, last in enumerate(occ) if year - last >= MIN_GAP),
+                   int(np.argmin(occ)))
+        occ[idx] = year
+        y = levels[idx]
+        va = "bottom" if up else "top"
         ax.plot([year, year], [0, y * 0.86], color=col, lw=1.1, alpha=0.75, zorder=1)
         ax.plot([year], [0], "o", ms=7, color=col, markeredgecolor="white",
                 markeredgewidth=1.4, zorder=3)
-        ax.text(year, y * 0.86 + (0.06 if va == "bottom" else -0.06),
+        ax.text(year, y * 0.86 + (0.06 if up else -0.06),
                 f"{year}\n{text}", ha="center", va=va, fontsize=8.4,
                 color=INK, linespacing=1.45,
                 bbox=dict(boxstyle="round,pad=0.34", fc=SURFACE, ec=col, lw=0.9, alpha=0.96))
@@ -122,7 +125,7 @@ def fig_timeline():
         ax.text(yr, -0.55, str(yr), ha="center", va="top", fontsize=8, color=INK_MUTED)
     ax.set_title("量子力学 125 年：从一次「绝望的凑数」到一个产业", fontsize=16,
                  fontweight="bold", pad=16)
-    return finish(fig, "10_timeline.png",
+    return finish(fig, "11_timeline.png",
                   "上半轴与下半轴交替排布，节点颜色标示所属时代；每个事件都对应本项目中的一段可运行代码")
 
 
@@ -173,7 +176,7 @@ def fig_people():
             "1927 年第五届索尔维会议合影里的 29 个人，有 17 位后来拿了诺贝尔奖 —— "
             "量子力学是人类历史上智力最密集的一次集体攻关。",
             fontsize=9, color=INK_2)
-    return finish(fig, "10_people.png",
+    return finish(fig, "11_people.png",
                   "注意年龄：海森堡提出矩阵力学时 24 岁，狄拉克写下狄拉克方程时 26 岁，泡利提出不相容原理时 25 岁——所以那时人们叫它「男孩物理学」")
 
 

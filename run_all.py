@@ -20,9 +20,10 @@ CHAPTERS = [
     ("05", "qhv.s05_dirac", "狄拉克：反物质与颤动"),
     ("06", "qhv.s06_entanglement", "量子纠缠与贝尔不等式"),
     ("07", "qhv.s07_emergence", "量子涌现：相变与经典世界"),
-    ("08", "qhv.s08_computing", "量子计算：Grover / Shor / VQE"),
-    ("09", "qhv.s09_communication", "量子通信：隐形传态与 BB84"),
-    ("10", "qhv.s10_timeline", "125 年时间轴与人物谱系"),
+    ("08", "qhv.s08_chips", "芯片里的量子力学：能带 / 隧穿 / 击穿"),
+    ("09", "qhv.s09_computing", "量子计算：Grover / Shor / VQE"),
+    ("10", "qhv.s10_communication", "量子通信：隐形传态与 BB84"),
+    ("11", "qhv.s11_timeline", "125 年时间轴与人物谱系"),
 ]
 
 
