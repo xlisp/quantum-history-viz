@@ -21,7 +21,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-from .style import use_style, finish, section, C, SERIES, INK, INK_2, INK_MUTED
+from .style import use_style, finish, section, C, SERIES, SEQ_BLUE, INK, INK_2, INK_MUTED
 
 DT = torch.float64
 CT = torch.complex128
@@ -140,9 +140,10 @@ def fig_tunneling():
     ax.annotate(f"势垒 V₀={V0}, 宽 a={a}", xy=(0, 0.052), xytext=(14, 0.052),
                 fontsize=9, color=INK_2, va="center",
                 arrowprops=dict(arrowstyle="->", color=INK_MUTED, lw=1))
+    ramp = [SEQ_BLUE[i] for i in (3, 6, 8, 10, 12)]   # 时间有序 → 单色顺序色阶
     for i, sn in enumerate(snaps):
         t = i * 1000 * dt
-        ax.plot(x, sn.abs() ** 2, color=SERIES[i % 8], lw=1.7, label=f"t = {t:.0f}")
+        ax.plot(x, sn.abs() ** 2, color=ramp[i % len(ramp)], lw=1.8, label=f"t = {t:.0f}")
     ax.text(-72, 0.049, "入射能量 E = 1.0 < V₀ = 2.0\n透射概率 ≈ 26%", fontsize=9.5,
             color=INK, bbox=dict(boxstyle="round,pad=0.45", fc="#eef4fd",
                                  ec=C["blue"], lw=1))
@@ -150,8 +151,8 @@ def fig_tunneling():
                 fontsize=8.5, color=INK_MUTED,
                 arrowprops=dict(arrowstyle="->", color=INK_MUTED, lw=0.9))
     ax.annotate("穿过去的那一部分", xy=(20, 0.014), xytext=(30, 0.030),
-                fontsize=8.5, color=C["magenta"],
-                arrowprops=dict(arrowstyle="->", color=C["magenta"], lw=0.9))
+                fontsize=8.5, color=C["orange"],
+                arrowprops=dict(arrowstyle="->", color=C["orange"], lw=0.9))
     ax.set_xlim(-80, 60); ax.set_ylim(0, 0.062)
     ax.set_xlabel("x"); ax.set_ylabel("|ψ(x,t)|²")
     ax.set_title("量子隧穿：能量不够，波包照样漏过去一部分")
