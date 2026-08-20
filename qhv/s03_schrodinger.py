@@ -132,30 +132,45 @@ def fig_tunneling():
 
     # (a) 一次演化的快照：E < V0，仍有一部分穿过去
     k0 = math.sqrt(2 * 1.0)          # E = k0²/2 = 1.0 < V0 = 2.0
-    psi0 = gaussian_packet(x, -40.0, k0, 6.0)
+    psi0 = gaussian_packet(x, -45.0, k0, 10.0)
     dt, steps = 0.01, 5000
-    _, snaps = split_step(psi0, x, V - 1j * 0 + absorber * 0, dt, steps, snap_every=1000)
+    _, snaps = split_step(psi0, x, V, dt, steps, snap_every=1000)
     ax = fig.add_subplot(gs[0, :])
-    for i, s in enumerate(snaps):
+    ax.axvspan(-a / 2, a / 2, color=INK_MUTED, alpha=0.30, lw=0)
+    ax.annotate(f"势垒 V₀={V0}, 宽 a={a}", xy=(0, 0.052), xytext=(14, 0.052),
+                fontsize=9, color=INK_2, va="center",
+                arrowprops=dict(arrowstyle="->", color=INK_MUTED, lw=1))
+    for i, sn in enumerate(snaps):
         t = i * 1000 * dt
-        ax.plot(x, s.abs() ** 2 + 0, color=SERIES[i % 8], lw=1.7, label=f"t = {t:.0f}")
-    ax.fill_between(x.numpy(), 0, (V / V0 * 0.06).numpy(), color=INK_MUTED, alpha=0.35)
-    ax.text(2.5, 0.052, f"势垒 V₀={V0}, 宽 a={a}\n入射能量 E=1.0 < V₀", fontsize=9, color=INK_2)
-    ax.set_xlim(-80, 80); ax.set_ylim(0, 0.075)
+        ax.plot(x, sn.abs() ** 2, color=SERIES[i % 8], lw=1.7, label=f"t = {t:.0f}")
+    ax.text(-72, 0.049, "入射能量 E = 1.0 < V₀ = 2.0\n透射概率 ≈ 26%", fontsize=9.5,
+            color=INK, bbox=dict(boxstyle="round,pad=0.45", fc="#eef4fd",
+                                 ec=C["blue"], lw=1))
+    ax.annotate("入射波与反射波干涉\n形成的驻波纹路", xy=(-14, 0.030), xytext=(-38, 0.033),
+                fontsize=8.5, color=INK_MUTED,
+                arrowprops=dict(arrowstyle="->", color=INK_MUTED, lw=0.9))
+    ax.annotate("穿过去的那一部分", xy=(20, 0.014), xytext=(30, 0.030),
+                fontsize=8.5, color=C["magenta"],
+                arrowprops=dict(arrowstyle="->", color=C["magenta"], lw=0.9))
+    ax.set_xlim(-80, 60); ax.set_ylim(0, 0.062)
     ax.set_xlabel("x"); ax.set_ylabel("|ψ(x,t)|²")
     ax.set_title("量子隧穿：能量不够，波包照样漏过去一部分")
     ax.legend(ncol=5, loc="upper right")
 
     # (b) 透射率 vs 能量：数值 vs 解析
-    energies = np.linspace(0.15, 4.0, 22)
+    # 逐个能量做一次完整演化：波包在空间上要足够宽（动量分布才够窄），
+    # 演化时间取「透射部分刚好完全越过势垒」，此时反射部分还没跑到边界，
+    # 避免 FFT 的周期性边界让它绕回来污染结果。
+    energies = np.linspace(0.2, 4.0, 20)
+    dx = float(x[1] - x[0])
+    x0, travel = -70.0, 140.0
     T_num = []
     for E in energies:
-        kk = math.sqrt(2 * E)
-        p0 = gaussian_packet(x, -60.0, kk, 12.0)     # 宽包 → 动量分布窄
-        psiT, _ = split_step(p0, x, V, 0.01, int(6500 / max(kk, 0.6)))
-        dx = float(x[1] - x[0])
-        right = (x > a / 2 + 3)
-        T_num.append(float((psiT.abs() ** 2)[right].sum() * dx))
+        kk = math.sqrt(2 * E)                        # 群速度 v = k (ħ=m=1)
+        p0 = gaussian_packet(x, x0, kk, 10.0)
+        steps = int(travel / (kk * 0.01))
+        psiT, _ = split_step(p0, x, V, 0.01, steps)
+        T_num.append(float((psiT.abs() ** 2)[x > a / 2 + 4].sum() * dx))
     T_ana = barrier_T_analytic(energies, V0, a)
     ax = fig.add_subplot(gs[1, 0])
     ax.plot(energies, T_ana, color=C["blue"], lw=2, label="解析解 T(E)")
