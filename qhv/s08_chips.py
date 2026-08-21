@@ -191,20 +191,32 @@ def fig_carriers():
 
     # ② 本征载流子浓度
     ax = axes[1]
-    T = np.linspace(200, 700, 300)
+    T = np.linspace(200, 900, 400)
     for name, m in MATERIALS.items():
         ni = n_intrinsic(T, m["Eg"], m["Nc"], m["Nv"])
         ax.semilogy(1000 / T, ni, color=m["color"], lw=2.2,
                     label=f"{name}  E_g={m['Eg']} eV")
-        ni300 = n_intrinsic(np.array([300.0]), m["Eg"], m["Nc"], m["Nv"])[0]
+        ni300 = float(n_intrinsic(np.array([300.0]), m["Eg"], m["Nc"], m["Nv"])[0])
+        if ni300 > 1e0:
+            ax.plot([1000 / 300], [ni300], "o", ms=7, color=m["color"], zorder=5,
+                    markeredgecolor="white", markeredgewidth=1.2)
         print(f"  n_i(300K) {name}: {ni300:.2e} cm⁻³")
     ax.axhline(1e15, color=INK_MUTED, ls="--", lw=1.4)
-    ax.text(2.7, 3e15, "典型掺杂浓度 10¹⁵ cm⁻³\n本征载流子一旦超过它，器件就失控",
-            fontsize=8.6, color=INK_2)
-    ax.set_xlabel("1000 / T  (K⁻¹)"); ax.set_ylabel("本征载流子浓度 n_i (cm⁻³)")
-    ax.set_ylim(1e2, 1e20)
+    ax.text(1.15, 2.2e15, "典型掺杂浓度 10¹⁵ cm⁻³", fontsize=8.4, color=INK_2, ha="left")
+    ax.axvline(1000 / 300, color=INK_MUTED, lw=1, ls=":")
+    ax.text(1000 / 300 - 0.08, 3e18, "室温 300 K", fontsize=8.4, color=INK_2,
+            rotation=90, va="top", ha="right")
+    ax.axvline(1000 / 423, color=C["red"], lw=1, ls=":")
+    ax.text(1000 / 423 + 0.08, 3e18, "150 °C", fontsize=8.4, color=C["red"],
+            rotation=90, va="top")
+    ax.annotate("锗在 100 °C 出头本征载流子就超过掺杂浓度\n→ 早期锗晶体管一发热就失效",
+                xy=(2.6, 1e15), xytext=(4.95, 8e16), fontsize=8.4, color=C["orange"],
+                ha="right", va="top",
+                arrowprops=dict(arrowstyle="->", color=C["orange"], lw=1))
+    ax.set_xlabel("1000 / T  (K⁻¹)   ← 温度升高"); ax.set_ylabel("本征载流子浓度 n_i (cm⁻³)")
+    ax.set_ylim(1e0, 1e20); ax.set_xlim(1.1, 5.0)
     ax.set_title("② 为什么锗被淘汰、SiC 能上高温")
-    ax.legend(fontsize=7.8, loc="lower left")
+    ax.legend(fontsize=7.6, loc="lower left")
 
     # ③ 掺杂硅的电子浓度：冻析 / 饱和 / 本征
     ax = axes[2]
